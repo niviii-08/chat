@@ -1,143 +1,130 @@
-// pages/chat.js
-import React, { useState, useEffect, useRef } from 'react';
-import Head from 'next/head';
-import Link from 'next/link';
+import { useState } from 'react';
 
-const ChatbotWidget = () => {
-  const [messages, setMessages] = useState([
-    { text: 'Hello! Welcome to the AI Chat. How can I help you today?', sender: 'bot', isBotResponse: true },
-  ]);
-  const [inputText, setInputText] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+export default function ChatPage() {
+  const [response, setResponse] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const messagesEndRef = useRef(null);
-  const chatInputRef = useRef(null);
+  const questions = [
+    'What is image recognition AI',
+    'How does image recognition work',
+    'Uses of image recognition',
+    'Benefits of image recognition AI',
+    'Limitations of image recognition',
+    'Can image recognition detect faces',
+    'Examples of image recognition AI',
+    'What are convolutional neural networks',
+    'Difference between object detection and recognition',
+    'Future of image recognition AI',
+  ];
 
-  const addMessage = (text, sender, isBotResponse = false) => {
-    setMessages((prevMessages) =>
-      Array.isArray(prevMessages)
-        ? [...prevMessages, { text, sender, isBotResponse }]
-        : [{ text, sender, isBotResponse }]
-    );
-  };
-
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
-
-  const handleSendMessage = async () => {
-    if (inputText.trim() === '') return;
-
-    const userMessage = inputText;
-    addMessage(userMessage, 'user');
-    setInputText('');
-    chatInputRef.current?.focus();
-    setIsLoading(true);
-
+  const askChat = async (prompt) => {
+    setLoading(true);
     try {
-      const response = await fetch('/api/chat', {
+      const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: userMessage }),
+        body: JSON.stringify({ prompt }),
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      if (data.result) {
-        addMessage(data.result, 'bot', true);
-      } else {
-        addMessage("Bot: I didn't get a clear response. Please try again.", 'bot', true);
-      }
-    } catch (error) {
-      console.error('Error fetching AI response:', error);
-      addMessage(`Bot: Sorry, I encountered an error: ${error.message}. Please try again later.`, 'bot', true);
-    } finally {
-      setIsLoading(false);
+      const data = await res.json();
+      setResponse(data.result || 'No response.');
+    } catch (err) {
+      setResponse('⚠️ Error fetching response.');
     }
-  };
-
-  const handleImageUpload = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      const fileName = file.name;
-      addMessage(`You selected an image: "${fileName}". Please note: this chatbot is currently configured for text-based AI interaction only.`, 'user');
-    }
-    event.target.value = '';
+    setLoading(false);
   };
 
   return (
-    <>
-      <Head>
-        <title>AI Chat</title>
-        <meta name="description" content="AI Chatbot Page" />
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
+    <div className="chat-wrapper">
+      <h1>🤖 Image Recognition Chatbot</h1>
+      <p className="subtitle">Tap a cloud to ask a question!</p>
 
-      <div className="chat-container">
-        <div className="chat-header">
-          <Link href="/" passHref>
-            <button className="close-button">&larr;</button>
-          </Link>
-          My AI Chatbot
-        </div>
-
-        <div className="chat-messages">
-          {messages.map((msg, index) => (
-            <div key={index} className={`message ${msg.sender}-message`}>
-              {msg.text}
-            </div>
-          ))}
-
-          {isLoading && (
-            <div className="message bot-message loading-message">
-              <span>Thinking</span>
-              <span className="dot-animation">.</span>
-              <span className="dot-animation delay-1">.</span>
-              <span className="dot-animation delay-2">.</span>
-            </div>
-          )}
-          <div ref={messagesEndRef} />
-        </div>
-
-        <div className="chat-input-area">
-          <input
-            type="text"
-            ref={chatInputRef}
-            placeholder={isLoading ? 'Waiting for response...' : 'Type a message...'}
-            value={inputText}
-            onChange={(e) => setInputText(e.target.value)}
-            onKeyPress={(e) => {
-              if (e.key === 'Enter' && !isLoading) {
-                handleSendMessage();
-              }
-            }}
-            disabled={isLoading}
-          />
-
-          <div className="action-buttons">
-            <div className="upload-btn-wrapper">
-              <button className="btn-upload" disabled={isLoading}>
-                <span className="icon">📁</span> Upload Image
-              </button>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleImageUpload}
-                disabled={isLoading}
-              />
-            </div>
-            <button onClick={handleSendMessage} disabled={isLoading}>
-              <span className="icon">✉️</span> Send
-            </button>
-          </div>
-        </div>
+      <div className="button-grid">
+        {questions.map((q, index) => (
+          <button key={index} className="cloud-button" onClick={() => askChat(q)}>
+            ☁️ {q}
+          </button>
+        ))}
       </div>
-    </>
-  );
-};
 
-export default ChatbotWidget;
+      <div className="response-box">
+        <h3>💬 Response</h3>
+        <p>{loading ? '⏳ Thinking...' : response}</p>
+      </div>
+
+      <style jsx>{`
+        .chat-wrapper {
+          padding: 50px 20px;
+          min-height: 100vh;
+          background: linear-gradient(to right, #dbeafe, #f0f4ff);
+          font-family: 'Segoe UI', sans-serif;
+          text-align: center;
+        }
+
+        h1 {
+          font-size: 2.4rem;
+          margin-bottom: 10px;
+          color: #1e40af;
+        }
+
+        .subtitle {
+          font-size: 1.1rem;
+          margin-bottom: 30px;
+          color: #475569;
+        }
+
+        .button-grid {
+          display: flex;
+          flex-wrap: wrap;
+          justify-content: center;
+          gap: 16px;
+          margin-bottom: 40px;
+        }
+
+        .cloud-button {
+          background: linear-gradient(to bottom right, #e0f7fa, #b2ebf2);
+          border: 2px solid #7dd3fc;
+          color: #0f172a;
+          padding: 14px 20px;
+          border-radius: 40px;
+          font-weight: bold;
+          cursor: pointer;
+          box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+          transition: all 0.2s ease-in-out;
+        }
+
+        .cloud-button:hover {
+          background: linear-gradient(to bottom right, #7dd3fc, #bae6fd);
+          transform: translateY(-4px);
+        }
+
+        .response-box {
+          background: #fff;
+          max-width: 700px;
+          margin: 0 auto;
+          padding: 24px 32px;
+          border-radius: 16px;
+          box-shadow: 0 12px 25px rgba(0, 0, 0, 0.1);
+          text-align: left;
+        }
+
+        .response-box h3 {
+          margin-bottom: 10px;
+          color: #065f46;
+        }
+
+        .response-box p {
+          font-size: 1.1rem;
+          color: #1f2937;
+        }
+
+        @media (max-width: 600px) {
+          .cloud-button {
+            width: 100%;
+            padding: 12px;
+          }
+        }
+      `}</style>
+    </div>
+  );
+}

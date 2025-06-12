@@ -1,6 +1,4 @@
-// src/pages/api/chat.js
-process.env.OPENAI_API_KEY
-
+// pages/api/chat.js
 export default function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -14,42 +12,26 @@ export default function handler(req, res) {
 
   const userInput = prompt.trim().toLowerCase();
 
-  // Predefined keyword-based responses
   const responses = {
-  'hello': 'Hello! How can I help you today?',
-  'hi': 'Hi there! 😊 How can I assist you?',
-  'what is your name': 'I am your friendly AI chatbot.',
-  'how are you': "I'm just code, but I’m doing great! Thanks for asking! 🤖",
-  'bye': 'Goodbye! Have a great day! 👋',
-  'help': 'Sure, I can help! You can ask me anything.',
-  'who made you': 'I was created by a developer using Next.js and React!',
-  'thank you': "You're welcome! 😊",
-  'what can you do': "I can answer basic questions and simulate conversations. Try asking about time, date, jokes, or greetings!",
-  'what is the time': `I'm not a clock, but you can check the time in your system tray or ask your device! ⏰`,
-  'what is the date': `Today’s date is ${new Date().toLocaleDateString()}. 📅`,
-  'tell me a joke': "Why don't programmers like nature? It has too many bugs. 😄",
-  'who are you': "I'm your AI companion. Here to help and chat with you!",
-  'open google': "I'm not allowed to open websites, but you can search on https://www.google.com 🔍",
-  'how old are you': "I’m timeless! I was just created a few milliseconds ago when you loaded this app. 😄",
-  'where are you from': "I'm from the cloud 🌥️ — no physical location, just code!",
-  'can you code': "Absolutely! I love writing clean, bug-free code. Just ask me what you want!",
-  'tell me something interesting': "Did you know? Honey never spoils. Archaeologists have found pots of honey in ancient Egyptian tombs that are over 3000 years old! 🍯",
-  'what is react': "React is a JavaScript library for building user interfaces, maintained by Meta.",
-  'what is next.js': "Next.js is a powerful React framework for building full-stack web applications.",
-  'good morning': "Good morning! ☀️ Hope you have a productive day ahead!",
-  'good night': "Good night! 🌙 Sleep well and recharge for tomorrow.",
-  'are you real': "I'm as real as 1s and 0s can be! 👾"
-};
+    'what is image recognition ai': 'Image Recognition AI identifies and processes images to detect objects, faces, scenes, and more.',
+    'how does image recognition work': 'It uses machine learning, especially convolutional neural networks (CNNs), to analyze and classify image data.',
+    'uses of image recognition': 'Used in facial recognition, medical imaging, self-driving cars, surveillance, and more.',
+    'benefits of image recognition ai': 'Improves accuracy, automation, and speed in diagnostics, security, and navigation.',
+    'limitations of image recognition': 'Issues include poor image quality, biased data, and high processing costs.',
+    'can image recognition detect faces': 'Yes, facial recognition is a key application of image recognition AI.',
+    'examples of image recognition ai': 'Examples include Google Lens, Apple Face ID, and Tesla Autopilot.',
+    'what are convolutional neural networks': 'CNNs are deep learning models used for image processing and classification.',
+    'difference between object detection and recognition': 'Detection finds object locations; recognition identifies the objects.',
+    'future of image recognition ai': 'Includes real-time recognition, better healthcare, smart cities, and AR/VR enhancements.'
+  };
 
-
-  // Match the input to one of the predefined responses
   const matchedKey = Object.keys(responses).find((key) =>
     userInput.includes(key)
   );
 
   const result = matchedKey
     ? responses[matchedKey]
-    : "I'm sorry, I don't understand that. Try asking something else!";
+    : "Sorry, I don't understand that. Ask something about image recognition AI.";
 
   return res.status(200).json({ result });
 }

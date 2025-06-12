@@ -27,7 +27,7 @@ export default function Home() {
               ABOUT
             </button>
             <button onClick={navTo('/chat')} className="btn btn-chat">
-              OPEN CHAT
+              WHY CHATBOT.AI ?
             </button>
           </div>
         </div>
