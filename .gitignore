@@ -12,7 +12,7 @@
 .env.local
 .env.development.local
 .env.production.local
-
+.env.local
 # ignore all other .env files…
 .env*
 # …but do NOT ignore our example/template

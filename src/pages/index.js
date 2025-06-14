@@ -1,4 +1,3 @@
-// pages/index.js
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 
@@ -29,6 +28,9 @@ export default function Home() {
             <button onClick={navTo('/chat')} className="btn btn-chat">
               WHY CHATBOT.AI ?
             </button>
+            <button onClick={navTo('/chatt')} className="btn btn-chat-alt">
+              CHAT
+            </button>
           </div>
         </div>
       </div>
@@ -51,7 +53,6 @@ export default function Home() {
           font-family: 'Inter', sans-serif;
         }
 
-        /* Full-screen pastel gradient background */
         .page-bg {
           height: 100vh;
           display: flex;
@@ -60,7 +61,6 @@ export default function Home() {
           background: linear-gradient(135deg, #e4c1f9 0%, #fbcfe8 100%);
         }
 
-        /* Frosted-glass card */
         .card {
           background: rgba(255, 255, 255, 0.95);
           backdrop-filter: blur(8px);
@@ -127,6 +127,15 @@ export default function Home() {
         .btn-chat:hover {
           transform: translateY(-3px);
           box-shadow: 0 12px 25px rgba(56, 161, 105, 0.3);
+        }
+
+        /* Chat Alt Button – Sky Blue */
+        .btn-chat-alt {
+          background: linear-gradient(135deg, #63b3ed 0%, #4299e1 100%);
+        }
+        .btn-chat-alt:hover {
+          transform: translateY(-3px);
+          box-shadow: 0 12px 25px rgba(66, 153, 225, 0.3);
         }
 
         @media (max-width: 480px) {
