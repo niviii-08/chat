@@ -1,3 +1,4 @@
+// pages/chatt.js
 import React, { useState, useEffect, useRef } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
@@ -44,10 +45,9 @@ const ChatbotWidget = () => {
         body: JSON.stringify({ prompt: userMessage }),
       });
 
-      const contentType = response.headers.get('content-type');
-      if (!response.ok || !contentType?.includes('application/json')) {
-        const errorText = await response.text();
-        throw new Error(`Server Error: ${errorText}`);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
@@ -58,7 +58,7 @@ const ChatbotWidget = () => {
       }
     } catch (error) {
       console.error('Error fetching AI response:', error);
-      addMessage(`Bot: Sorry, I encountered an error: ${error.message}`, 'bot', true);
+      addMessage(`Bot: Sorry, I encountered an error: ${error.message}. Please try again later.`, 'bot', true);
     } finally {
       setIsLoading(false);
     }
@@ -85,10 +85,9 @@ const ChatbotWidget = () => {
           }),
         });
 
-        const contentType = response.headers.get('content-type');
-        if (!response.ok || !contentType?.includes('application/json')) {
-          const errorText = await response.text();
-          throw new Error(`Server Error: ${errorText}`);
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
         }
 
         const data = await response.json();
@@ -102,7 +101,7 @@ const ChatbotWidget = () => {
         addMessage(`Bot: Error analyzing image: ${error.message}`, 'bot', true);
       } finally {
         setIsLoading(false);
-        event.target.value = '';
+        event.target.value = ''; // Reset file input
       }
     };
 

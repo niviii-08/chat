@@ -1,51 +1,55 @@
-import OpenAI from 'openai';
+// src/pages/api/chat.js
+process.env.OPENAI_API_KEY
 
-const openai = new OpenAI({
-  apiKey: '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'
-});
-
-export default async function handler(req, res) {
+export default function handler(req, res) {
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method Not Allowed' });
+    return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { prompt, imageBase64 } = req.body;
+  const { prompt } = req.body;
 
   if (!prompt || typeof prompt !== 'string') {
     return res.status(400).json({ error: 'Invalid prompt' });
   }
 
-  try {
-    const messages = imageBase64
-      ? [
-          {
-            role: 'user',
-            content: [
-              { type: 'text', text: prompt },
-              {
-                type: 'image_url',
-                image_url: {
-                  url: imageBase64, // Must be a valid base64 Data URL (e.g., 'data:image/png;base64,...')
-                },
-              },
-            ],
-          },
-        ]
-      : [{ role: 'user', content: prompt }];
+  const userInput = prompt.trim().toLowerCase();
 
-    const completion = await openai.chat.completions.create({
-      model: imageBase64 ? 'gpt-4-vision-preview' : 'gpt-3.5-turbo',
-      messages,
-      max_tokens: 1000,
-    });
+  // Predefined keyword-based responses
+  const responses = {
+  'hello': 'Hello! How can I help you today?',
+  'hi': 'Hi there! 😊 How can I assist you?',
+  'what is your name': 'I am your friendly AI chatbot.',
+  'how are you': "I'm just code, but I’m doing great! Thanks for asking! 🤖",
+  'bye': 'Goodbye! Have a great day! 👋',
+  'help': 'Sure, I can help! You can ask me anything.',
+  'who made you': 'I was created by a developer using Next.js and React!',
+  'thank you': "You're welcome! 😊",
+  'what can you do': "I can answer basic questions and simulate conversations. Try asking about time, date, jokes, or greetings!",
+  'what is the time': `I'm not a clock, but you can check the time in your system tray or ask your device! ⏰`,
+  'what is the date': `Today’s date is ${new Date().toLocaleDateString()}. 📅`,
+  'tell me a joke': "Why don't programmers like nature? It has too many bugs. 😄",
+  'who are you': "I'm your AI companion. Here to help and chat with you!",
+  'open google': "I'm not allowed to open websites, but you can search on https://www.google.com 🔍",
+  'how old are you': "I’m timeless! I was just created a few milliseconds ago when you loaded this app. 😄",
+  'where are you from': "I'm from the cloud 🌥️ — no physical location, just code!",
+  'can you code': "Absolutely! I love writing clean, bug-free code. Just ask me what you want!",
+  'tell me something interesting': "Did you know? Honey never spoils. Archaeologists have found pots of honey in ancient Egyptian tombs that are over 3000 years old! 🍯",
+  'what is react': "React is a JavaScript library for building user interfaces, maintained by Meta.",
+  'what is next.js': "Next.js is a powerful React framework for building full-stack web applications.",
+  'good morning': "Good morning! ☀️ Hope you have a productive day ahead!",
+  'good night': "Good night! 🌙 Sleep well and recharge for tomorrow.",
+  'are you real': "I'm as real as 1s and 0s can be! 👾"
+};
 
-    const result = completion.choices?.[0]?.message?.content;
-    res.status(200).json({ result });
-  } catch (error) {
-    console.error('❌ OpenAI API Error:', error);
-    res.status(500).json({
-      error: 'Failed to generate response',
-      details: error?.message || String(error),
-    });
-  }
+
+  // Match the input to one of the predefined responses
+  const matchedKey = Object.keys(responses).find((key) =>
+    userInput.includes(key)
+  );
+
+  const result = matchedKey
+    ? responses[matchedKey]
+    : "I'm sorry, I don't understand that. Try asking something else!";
+
+  return res.status(200).json({ result });
 }
