@@ -1,11 +1,14 @@
-// pages/chat.js
 import React, { useState, useEffect, useRef } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 
 const ChatbotWidget = () => {
   const [messages, setMessages] = useState([
-    { text: 'Hello! Welcome to the AI Chat. How can I help you today?', sender: 'bot', isBotResponse: true },
+    {
+      text: 'Hello! Welcome to the AI Chat. How can I help you today?',
+      sender: 'bot',
+      isBotResponse: true,
+    },
   ]);
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -35,15 +38,16 @@ const ChatbotWidget = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/chat', {
+      const response = await fetch('/api/chatt', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt: userMessage }),
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+      const contentType = response.headers.get('content-type');
+      if (!response.ok || !contentType?.includes('application/json')) {
+        const errorText = await response.text();
+        throw new Error(`Server Error: ${errorText}`);
       }
 
       const data = await response.json();
@@ -54,7 +58,7 @@ const ChatbotWidget = () => {
       }
     } catch (error) {
       console.error('Error fetching AI response:', error);
-      addMessage(`Bot: Sorry, I encountered an error: ${error.message}. Please try again later.`, 'bot', true);
+      addMessage(`Bot: Sorry, I encountered an error: ${error.message}`, 'bot', true);
     } finally {
       setIsLoading(false);
     }
@@ -62,11 +66,47 @@ const ChatbotWidget = () => {
 
   const handleImageUpload = (event) => {
     const file = event.target.files[0];
-    if (file) {
-      const fileName = file.name;
-      addMessage(`You selected an image: "${fileName}". Please note: this chatbot is currently configured for text-based AI interaction only.`, 'user');
-    }
-    event.target.value = '';
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async () => {
+      const base64 = reader.result;
+
+      addMessage("📤 Uploading and analyzing the image...", 'user');
+      setIsLoading(true);
+
+      try {
+        const response = await fetch('/api/chatt', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            prompt: inputText || "Please analyze this image.",
+            imageBase64: base64,
+          }),
+        });
+
+        const contentType = response.headers.get('content-type');
+        if (!response.ok || !contentType?.includes('application/json')) {
+          const errorText = await response.text();
+          throw new Error(`Server Error: ${errorText}`);
+        }
+
+        const data = await response.json();
+        if (data.result) {
+          addMessage(data.result, 'bot', true);
+        } else {
+          addMessage("Bot: I couldn't interpret the image properly. Try again.", 'bot', true);
+        }
+      } catch (error) {
+        console.error('Image upload error:', error);
+        addMessage(`Bot: Error analyzing image: ${error.message}`, 'bot', true);
+      } finally {
+        setIsLoading(false);
+        event.target.value = '';
+      }
+    };
+
+    reader.readAsDataURL(file);
   };
 
   return (
@@ -130,7 +170,7 @@ const ChatbotWidget = () => {
                 disabled={isLoading}
               />
             </div>
-            <button onClick={handleSendMessage} disabled={isLoading}>
+            <button className="btn-send" onClick={handleSendMessage} disabled={isLoading}>
               <span className="icon">✉️</span> Send
             </button>
           </div>
