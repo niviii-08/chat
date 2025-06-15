@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
+import { Analytics } from "@vercel/analytics/react"; // Use `react` import not `next`
 
 const ChatbotWidget = () => {
   const [messages, setMessages] = useState([
@@ -12,16 +13,11 @@ const ChatbotWidget = () => {
   ]);
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-
   const messagesEndRef = useRef(null);
   const chatInputRef = useRef(null);
 
   const addMessage = (text, sender, isBotResponse = false) => {
-    setMessages((prevMessages) =>
-      Array.isArray(prevMessages)
-        ? [...prevMessages, { text, sender, isBotResponse }]
-        : [{ text, sender, isBotResponse }]
-    );
+    setMessages((prev) => [...prev, { text, sender, isBotResponse }]);
   };
 
   useEffect(() => {
@@ -30,7 +26,6 @@ const ChatbotWidget = () => {
 
   const handleSendMessage = async () => {
     if (inputText.trim() === '') return;
-
     const userMessage = inputText;
     addMessage(userMessage, 'user');
     setInputText('');
@@ -38,27 +33,18 @@ const ChatbotWidget = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/chatt', {
+      const res = await fetch('/api/chatt', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt: userMessage }),
       });
 
-      const contentType = response.headers.get('content-type');
-      if (!response.ok || !contentType?.includes('application/json')) {
-        const errorText = await response.text();
-        throw new Error(`Server Error: ${errorText}`);
-      }
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || "API failed");
 
-      const data = await response.json();
-      if (data.result) {
-        addMessage(data.result, 'bot', true);
-      } else {
-        addMessage("Bot: I didn't get a clear response. Please try again.", 'bot', true);
-      }
-    } catch (error) {
-      console.error('Error fetching AI response:', error);
-      addMessage(`Bot: Sorry, I encountered an error: ${error.message}`, 'bot', true);
+      addMessage(data.result || "Bot could not respond clearly.", 'bot', true);
+    } catch (err) {
+      addMessage(`Bot: Error - ${err.message}`, 'bot', true);
     } finally {
       setIsLoading(false);
     }
@@ -71,35 +57,25 @@ const ChatbotWidget = () => {
     const reader = new FileReader();
     reader.onload = async () => {
       const base64 = reader.result;
-
-      addMessage("📤 Uploading and analyzing the image...", 'user');
+      addMessage("📤 Uploading and analyzing image...", 'user');
       setIsLoading(true);
 
       try {
-        const response = await fetch('/api/chatt', {
+        const res = await fetch('/api/chatt', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            prompt: inputText || "Please analyze this image.",
+            prompt: inputText || "Analyze this image.",
             imageBase64: base64,
           }),
         });
 
-        const contentType = response.headers.get('content-type');
-        if (!response.ok || !contentType?.includes('application/json')) {
-          const errorText = await response.text();
-          throw new Error(`Server Error: ${errorText}`);
-        }
+        const data = await res.json();
+        if (!res.ok) throw new Error(data?.error || "Image API error");
 
-        const data = await response.json();
-        if (data.result) {
-          addMessage(data.result, 'bot', true);
-        } else {
-          addMessage("Bot: I couldn't interpret the image properly. Try again.", 'bot', true);
-        }
-      } catch (error) {
-        console.error('Image upload error:', error);
-        addMessage(`Bot: Error analyzing image: ${error.message}`, 'bot', true);
+        addMessage(data.result || "Bot: Couldn't interpret the image properly.", 'bot', true);
+      } catch (err) {
+        addMessage(`Bot: Error analyzing image - ${err.message}`, 'bot', true);
       } finally {
         setIsLoading(false);
         event.target.value = '';
@@ -126,8 +102,8 @@ const ChatbotWidget = () => {
         </div>
 
         <div className="chat-messages">
-          {messages.map((msg, index) => (
-            <div key={index} className={`message ${msg.sender}-message`}>
+          {messages.map((msg, i) => (
+            <div key={i} className={`message ${msg.sender}-message`}>
               {msg.text}
             </div>
           ))}
@@ -150,10 +126,8 @@ const ChatbotWidget = () => {
             placeholder={isLoading ? 'Waiting for response...' : 'Type a message...'}
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
-            onKeyPress={(e) => {
-              if (e.key === 'Enter' && !isLoading) {
-                handleSendMessage();
-              }
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !isLoading) handleSendMessage();
             }}
             disabled={isLoading}
           />
@@ -176,6 +150,8 @@ const ChatbotWidget = () => {
           </div>
         </div>
       </div>
+
+      <Analytics />
     </>
   );
 };

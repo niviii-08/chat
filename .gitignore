@@ -17,6 +17,9 @@
 .env*
 # …but do NOT ignore our example/template
 !.env.example
+firebase-admin.json
+# sensitive firebase credentials
+serviceAccountKey.json
 
 # testing
 /coverage
